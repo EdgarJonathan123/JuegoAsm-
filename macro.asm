@@ -37,43 +37,19 @@ ModoTexto macro
     int 10h
 endm
 
-;-------------DELAY 1 PARA QUE SEA VISIBLE
-Delay macro constante
-    LOCAL D1,D2,Fin
-    push si
-    push di
-
-    mov si,constante
-    D1:
-        dec si
-        jz Fin
-        mov di,constante
-    D2:
-        dec di
-        jnz D2
-        jmp D1
-
-    Fin:
-        pop di
-        pop si
+mDelay macro constante
+    push ax
+    mov ax,constante
+    call delay
+    pop ax
 endm
 
-;mov [di],30h
 
-mPintarMargen macro color
-    mov dl, color
-    call pintarMargen
+String_size macro cadena 
+	push offset cadena 
+    call Str_length
 endm
 
-;------------------------
-;
-;
-;
-;
-;
-;------------------------
-
-;--------------OBTENER CARACTER DE CONSOLA CON ECHO A PANTALLA----------------------
 getChar macro
     mov ah,0dh
     int 21h
@@ -81,40 +57,7 @@ getChar macro
     int 21h
 endm
 
-;--------------MACRO IMPRESION DE CADENA---------------------------
 print macro cadena
-    push ax
-    push dx
-    mov ax,@data
-    mov ds,ax
-    mov ah,09
-    mov dx,offset cadena
-    int 21h
-    pop dx
-    pop ax
-endm
-
-mpintarPelota macro pos, color
-    mov di,pos
-    mov dl,color
-    call pintarPelota
-endm
-
-mtolineal macro posx,posy
-    push posx
-    push posy
-    call tolineal
-endm
-
-
-mgetxy macro posicion
-    push posicion
-    call getxy
-endm
-
-
-
-
-movmiento macro 
-    call avanzaPelota
+    push offset cadena
+    call WriteString
 endm

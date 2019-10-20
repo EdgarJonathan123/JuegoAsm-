@@ -19,17 +19,11 @@ main proc
 	;fin etiqueta
 
 	Video1:
-		ModoVideo
-		mPintarMargen 5
 
-		mtolineal posI[0],posI[1]
-		mov bx,ax
+		mSetup
+		mGame
 
-		movmiento
-
-		;getChar
-        ;TES:
-		    ModoTexto
+		ModoTexto
 		jmp MenuPrincipal
 
 	;fin etiqueta

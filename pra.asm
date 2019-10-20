@@ -4,14 +4,11 @@
     .model small , stdcall
     .286
     .stack 100h
-
-        include Juego.inc
         include proc.inc
-        topex = 61114d
+        include juego.inc
     .data
         include data.asm
 ;================= FIN TIPO DE EJECUTABLE ========================
-
 .code
 ;================== SECCION DE CODIGO =============================
     include main.asm

@@ -1,0 +1,492 @@
+include mjuego.asm
+
+.data
+;====================Ini Var Globales=============================
+	topex = 61114d
+	salidaJuego 	word 	0
+	
+
+	LimiteIzquierdo =	6d  				;margen Izquierdo
+	LimiteDerecho	=	311d				;margen derecho
+	LimiteSuperior	=	21d					;margen superior
+	LimiteInferior	=	187d				;margen inferior
+
+	estado 			word 	1d 				;estado de direccion de la pelota
+	direccion 		word 	0
+	posicion 		word 	5
+
+
+	prueba 			db 'esto es una prueba',13,10,'$'
+
+;====================Fin Var Globales=============================
+
+.code
+;====================Ini Conversiones=============================
+	tolineal proc
+        ;--------------------------------------------------------------------;
+        ;   Recibe:      DS:[bp+4]  posy                          		     ;
+        ;                DS:[bp+6]  posx                                     ;
+        ;                                                                    ;
+        ;   Devuelve:    AX=coordenada mapeada                               ;
+        ;                                                                    ;
+        ;   Comentarios: mapea coordenadas					                 ;
+        ;--------------------------------------------------------------------;
+
+        ;ini Subrutina proglogo
+            push bp                    ;almacenamos el puntero base
+            mov  bp,sp                 ;ebp contiene la direccion de esp
+			push bx
+			push dx
+			push cx
+        ;fin Surutina prologo
+
+        ;Ini Codigo--
+            
+            mov bx,[bp+4]              ;bx = posy
+            mov ax,[bp+6]              ;ax = posx
+			mov cx,320d
+			mul cx
+			add ax,bx
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+				pop cx
+				pop dx
+				pop bx
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 4
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+    tolineal endp
+
+	getxy proc  
+	    ;--------------------------------------------------------------------
+        ;   Recibe:      DS:[bp+4]  posicion absoluta                    		     
+        ;                                                                    
+        ;   Devuelve:    AX=Fila     
+		;				 BX=Columna                      
+        ;                                                                    
+        ;   Comentarios: Dada una posicion absoluta se determina 
+		;				 la fila y columna				                 
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+            push bp                    ;almacenamos el puntero base
+            mov  bp,sp                 ;ebp contiene la direccion de esp
+			push dx
+			push bx
+        ;fin Surutina prologo
+
+        ;Ini Codigo--
+            mov dx,0				   	;limpiamos dividendo, superior
+            mov ax,word ptr[bp+4]       ;ax = posicion absoluta, divendo inferior
+            mov bx,320d					;divisor
+
+			div bx
+            mov cx,dx
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+				pop bx
+				pop dx
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 2
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+
+	getxy endp
+
+	pintarMargen proc 
+	    ;--------------------------------------------------------------------
+        ;   Recibe:      dl = color                         		     
+        ;                                                                    
+        ;   Devuelve:    Nada                               
+        ;                                                                    
+        ;   Comentarios: Pinta un maren en modo grafico					                 
+        ;--------------------------------------------------------------------
+
+
+        ;Ini Codigo--
+            
+         	;empieza en pixel (i,j) = (20,0) = 20*320+0 = 6400
+			;barra horizontal superior
+			mov di,6405
+			Primera:
+				mov es:[di],dl
+				inc di
+				cmp di,6714 
+				jne Primera
+			;fin etiqueta
+
+			;barra horizontal inferior
+			;empieza en pixel (i,j) = (190,0) = 190 * 320 + 0 = 60800
+			mov di,60805
+			Segunda:
+				mov es:[di],dl
+				inc di
+				cmp di, topex
+				jne Segunda
+			;fin
+
+			mov ax,estado[0]
+			cmp ax,5d
+			je FIN
+
+			;barra vertical izquierda
+			mov di, 6405
+			Tercera:
+				mov es:[di], dl
+				add di,320
+				cmp di,60805
+				jne Tercera
+			;fin
+
+			;barra vertical derecha
+			mov di,6714
+			Cuarta:
+				mov es:[di], dl
+				add di,320
+				cmp di,topex
+				jne Cuarta
+			;fin
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+	pintarMargen endp
+
+	pintarBarra proc
+		;--------------------------------------------------------------------
+        ;   Recibe:       di  pos   
+		;				  DL = color                                    
+        ;                                                                    
+        ;   Devuelve:    nada	                               
+        ;                                                                    
+        ;   Comentarios: Cambia de posicion la pelotita					                 
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+        ;fin Surutina prologo
+
+        ;Ini Codigo--
+
+			mov dl,9
+			mtolineal 48,179
+			mov di,ax
+			mov bx,0
+
+			bucle:
+				cmp bx,7
+				jmp Bucle1
+				mov es:[di+bx],dl
+				inc bx
+				jmp bucle
+			;fin 
+			
+			mtolineal 48,180
+			mov di,ax
+			mov bx,0
+
+			bucle1:
+				cmp bx,7
+				jmp FIN
+				mov es:[di+bx],dl
+				inc bx
+				jmp bucle1
+			;fin bucle
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+	pintarBarra endp
+
+	pintarPelota proc
+		;--------------------------------------------------------------------
+        ;   Recibe:       di  pos   
+		;				  DL = color                                    
+        ;                                                                    
+        ;   Devuelve:    nada	                               
+        ;                                                                    
+        ;   Comentarios: Cambia de posicion la pelotita					                 
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+        ;fin Surutina prologo
+
+        ;Ini Codigo--
+    		mov es:[di],dl
+    		mov es:[di+1], dl
+    		mov es:[di+2], dl
+
+    		mov es:[di+320], dl
+    		mov es:[di+321], dl
+    		mov es:[di+322], dl
+
+    		mov es:[di+640], dl
+    		mov es:[di+641], dl
+    		mov es:[di+642], dl
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+	pintarPelota endp
+
+	mover proc 
+		;--------------------------------------------------------------------
+        ;   Recibe:    	 AX = estado                                       
+        ;   Devuelve:    Nada	                                              
+        ;   Comentarios: Avanza una posicion	
+        ;				 Dependiendo el valor del estado(Variable global)
+        ;				 1 = NorEste
+		; 				 2 = NorOeste
+		;				 3 = SurOeste
+		;				 4 = SurEste				                 
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+        ;fin Surutina prologo
+
+        ;Ini Codigo--
+        	cmp ax,1
+        	je NorEste
+        	cmp ax,2
+        	je NorOeste
+        	cmp ax,3
+        	je SurOeste
+        	cmp ax,4
+        	je SurEste
+
+        	NorEste:
+				mpintarPelota bx, 0 ;(i,j) = (110,160) = 110*320 + 160
+				sub bx,319
+				mov posicion[0],bx
+				mpintarPelota bx, 2
+				jmp FIN
+			;fin accion
+
+			SurEste:
+				mpintarPelota bx, 0 ;(i,j) = (110,160) = 110*320 + 160
+				add bx,321
+				mov posicion[0],bx
+				mpintarPelota bx, 2
+				jmp FIN
+			;fin
+
+			NorOeste:
+				mpintarPelota bx, 0 ;(i,j) = (110,160) = 110*320 + 160
+				sub bx,321
+				mov posicion[0],bx
+				mpintarPelota bx, 2
+				jmp FIN
+			;fin 
+
+			SurOeste:
+				mpintarPelota bx, 0 ;(i,j) = (110,160) = 110*320 + 160
+				add bx,319
+				mov posicion[0],bx
+				mpintarPelota bx, 2
+				jmp FIN
+			;fin
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+	mover endp
+;====================Fin Conversiones=============================
+
+;====================Ini Loop======================================
+	
+	game proc
+		BUCLE:
+			mov ax,salidaJuego[0]
+			cmp ax,1
+			je FIN
+				mInstrucciones
+			jmp Bucle
+		FIN:
+			ret
+	game endp
+
+	
+
+	avanzaPelota proc
+	    ;--------------------------------------------------------------------
+        ;   Recibe:      bx = posicion                          		                                  
+        ;   Devuelve:    Nada				                                 
+        ;                                                                    
+        ;   Comentarios: Cambia el 		                 
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+        	push ax
+        	push bx
+        
+        ;ini Subrutina prologo
+
+        ;Ini Codigo--
+        	mov bx,posicion[0]
+        	mov ax,estado[0]
+
+        	cmp ax,1
+        	je NorEste
+        	cmp ax,2
+        	je NorOeste
+        	cmp ax,3
+        	je SurOeste
+        	cmp ax,4
+        	je SurEste
+
+
+			NorEste:
+				mMover
+				mgetxy bx
+				cmp ax,LimiteSuperior					;¿fila = limite Superior?
+				je EstadoSurEste
+				cmp cx,LimiteDerecho					;Columna = limite Derecho?
+				je EstadoNorOeste
+				jmp FIN
+			;fin accion
+
+			SurEste:
+				mMover
+				mgetxy bx
+				cmp ax,LimiteInferior					;¿fila = limite inferior?
+				je EstadoNoreste				
+				cmp cx,LimiteDerecho					;Columna = limite Derecho?	
+				je EstadoSurOeste
+
+				jmp FIN
+			;fin
+
+			NorOeste:
+				mMover
+				mgetxy bx
+				cmp ax,LimiteSuperior					;¿fila = limite Superior?
+				je EstadoSurOeste
+				cmp cx,LimiteIzquierdo					;¿Columna = limite Izquierdo?
+				je EstadoNorEste
+				jmp FIN
+			;fin 
+
+			SurOeste:
+				mMover
+				mgetxy bx
+				cmp ax,LimiteInferior					;¿fila = limite inferior?
+				je EstadoNorOeste
+				cmp cx,LimiteIzquierdo					;¿columna = limite izquierdo?
+				je EstadoSurEste
+				jmp FIN
+			;fin
+
+
+			EstadoSurEste:
+				mov estado[0],4						;4=SurEste
+				jmp FIN
+			;fin
+			EstadoNorEste:
+				mov estado[0],1						;1=NorEste
+				jmp FIN
+			;fin
+			EstadoNorOeste:
+				mov estado[0],2						;2=NorOeste
+				jmp FIN
+			;fin
+			EstadoSurOeste:
+				mov estado[0],3						;3=SurOeste	
+				jmp FIN
+			;fin
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+            	pop bx
+            	pop ax
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+	avanzaPelota endp
+
+;====================Fin Loop======================================
+
+;====================Ini Instrucciones======================================
+	setup proc
+	 	;--------------------------------------------------------------------
+        ;   Recibe:      Nada                         		     
+        ;                                                                    
+        ;   Devuelve:    Nada				                                 
+        ;                                                                    
+        ;   Comentarios: Inicia el modo video y los valores inicales del juego					                 
+        ;--------------------------------------------------------------------
+
+        ;Ini Subrutina prologo
+       		push bp                    ;almacenamos el puntero base
+        	mov  bp,sp                 ;ebp contiene la direccion de esp
+        ;Fin Subrutina prologo
+
+        ;Ini Codigo--
+
+        	ModoVideo
+			mPintarMargen 5
+			
+			mov posicion[0],5
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 
+        ;fin Subrutina epilogo
+	setup endp
+
+	instrucciones proc
+	    ;--------------------------------------------------------------------
+        ;   Recibe:      Nada                         	                           
+        ;   Devuelve:    Nada				                                   
+        ;   Comentarios: Realiza instrucciones del juego					                 
+        ;--------------------------------------------------------------------
+
+        ;Ini Subrutina prologo
+        	push bp                    ;almacenamos el puntero base
+        	mov  bp,sp                 ;ebp contiene la direccion de esp
+        ;Fin Subrutina prologo
+
+        ;Ini Codigo--
+        	mAvanzaPelota
+        	mDelay 150
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 
+        ;fin Subrutina epilogo
+	instrucciones endp
+
+;====================Fin Instrucciones======================================
+

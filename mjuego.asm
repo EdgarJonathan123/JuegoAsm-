@@ -1,7 +1,7 @@
 ;====================Fin Conversiones====================
-    mtolineal macro posx,posy
-        push posx
-        push posy
+    mtolineal macro fila,col
+        push fila
+        push col
         call tolineal
     endm
 
@@ -15,8 +15,10 @@
 ;====================Ini Pantalla====================
 
     mPintarMargen macro color
-        mov dl, color
+        push dx
+        mov dl,color
         call pintarMargen
+        pop dx
     endm
 
 
@@ -27,6 +29,18 @@
         mov di,pos
         mov dl,color
         call pintarPelota
+
+        pop dx
+        pop di
+    endm
+
+    mPintarBarra macro pos,color
+        push di 
+        push dx
+
+        mov di,pos
+        mov dl,color
+        call pintarBarra
 
         pop dx
         pop di

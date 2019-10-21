@@ -19,7 +19,7 @@ main proc
 	;fin etiqueta
 
 	Video1:
-
+	
 		mSetup
 		mGame
 

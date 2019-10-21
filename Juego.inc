@@ -2,7 +2,6 @@ include mjuego.asm
 
 .data
 ;====================Ini Var Globales=============================
-	topex = 61114d
 	salidaJuego 	word 	0
 	
 
@@ -12,20 +11,20 @@ include mjuego.asm
 	LimiteInferior	=	187d				;margen inferior
 
 	estado 			word 	1d 				;estado de direccion de la pelota
-	direccion 		word 	0
-	posicion 		word 	5
+	direccion 		word 	0d
+	posicion 		word 	0d
+	posBarra 		word	0d
 
 
 	prueba 			db 'esto es una prueba',13,10,'$'
-
 ;====================Fin Var Globales=============================
 
 .code
 ;====================Ini Conversiones=============================
 	tolineal proc
         ;--------------------------------------------------------------------;
-        ;   Recibe:      DS:[bp+4]  posy                          		     ;
-        ;                DS:[bp+6]  posx                                     ;
+        ;   Recibe:      DS:[bp+4]  col                          		     ;
+        ;                DS:[bp+6]  fila                                     ;
         ;                                                                    ;
         ;   Devuelve:    AX=coordenada mapeada                               ;
         ;                                                                    ;
@@ -42,8 +41,8 @@ include mjuego.asm
 
         ;Ini Codigo--
             
-            mov bx,[bp+4]              ;bx = posy
-            mov ax,[bp+6]              ;ax = posx
+            mov bx,[bp+4]              ;bx = col
+            mov ax,[bp+6]              ;ax = fila
 			mov cx,320d
 			mul cx
 			add ax,bx
@@ -67,7 +66,7 @@ include mjuego.asm
         ;   Recibe:      DS:[bp+4]  posicion absoluta                    		     
         ;                                                                    
         ;   Devuelve:    AX=Fila     
-		;				 BX=Columna                      
+		;				 CX=Columna                      
         ;                                                                    
         ;   Comentarios: Dada una posicion absoluta se determina 
 		;				 la fila y columna				                 
@@ -99,7 +98,6 @@ include mjuego.asm
                 ret 2
             ;fin etiqueta
         ;fin Subrutina epilogo
-
 	getxy endp
 
 	pintarMargen proc 
@@ -130,13 +128,10 @@ include mjuego.asm
 			Segunda:
 				mov es:[di],dl
 				inc di
-				cmp di, topex
+				cmp di,61114d
 				jne Segunda
 			;fin
 
-			mov ax,estado[0]
-			cmp ax,5d
-			je FIN
 
 			;barra vertical izquierda
 			mov di, 6405
@@ -152,7 +147,7 @@ include mjuego.asm
 			Cuarta:
 				mov es:[di], dl
 				add di,320
-				cmp di,topex
+				cmp di,61114d
 				jne Cuarta
 			;fin
 
@@ -172,43 +167,46 @@ include mjuego.asm
         ;                                                                    
         ;   Devuelve:    nada	                               
         ;                                                                    
-        ;   Comentarios: Cambia de posicion la pelotita					                 
+        ;   Comentarios: Cambia de posicion de la barra				                 
         ;--------------------------------------------------------------------
 
-        ;ini Subrutina proglogo
+        ;ini Subrutina proglogo.
+        	push bp                    	;almacenamos el puntero base
+        	mov  bp,sp               	;ebp contiene la direccion de esp
+        	sub  sp,4					;Guardamos espacio para dos variables locales
+        	push ax
+        	push bx
         ;fin Surutina prologo
 
         ;Ini Codigo--
+        	mov word ptr[bp-2],200				;Numero de Columnas
+        	mov word ptr[bp-4],7				;Numero de Filas
+        	xor bx,bx
+        	xor ax,ax
 
-			mov dl,9
-			mtolineal 48,179
-			mov di,ax
-			mov bx,0
+        	D1:
+        		mov es:[di+bx],dl
+        		cmp bx,word ptr[bp-2]			;[bp-2] Columnas
+        		je D2
+        		inc bx
+        		jmp D1
+        	D2:
+        		cmp ax,word ptr[bp-4]		   	;[bp-4] Filas
+        		je FIN
+        		xor bx,bx
+        		inc ax
+        		add di,320d
+        		jmp D1
 
-			bucle:
-				cmp bx,7
-				jmp Bucle1
-				mov es:[di+bx],dl
-				inc bx
-				jmp bucle
-			;fin 
-			
-			mtolineal 48,180
-			mov di,ax
-			mov bx,0
-
-			bucle1:
-				cmp bx,7
-				jmp FIN
-				mov es:[di+bx],dl
-				inc bx
-				jmp bucle1
-			;fin bucle
 
         ;Fin Codigo--
 
         ;ini Subrutina epilogo
             FIN:
+            	pop bx
+            	pop ax
+            	mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
                 ret 
             ;fin etiqueta
         ;fin Subrutina epilogo
@@ -328,8 +326,6 @@ include mjuego.asm
 			ret
 	game endp
 
-	
-
 	avanzaPelota proc
 	    ;--------------------------------------------------------------------
         ;   Recibe:      bx = posicion                          		                                  
@@ -427,7 +423,6 @@ include mjuego.asm
             ;fin etiqueta
         ;fin Subrutina epilogo
 	avanzaPelota endp
-
 ;====================Fin Loop======================================
 
 ;====================Ini Instrucciones======================================
@@ -446,11 +441,15 @@ include mjuego.asm
         ;Fin Subrutina prologo
 
         ;Ini Codigo--
-
         	ModoVideo
 			mPintarMargen 5
-			
-			mov posicion[0],5
+
+			mtolineal 180,40
+			mov posBarra[0],ax
+			mPintarBarra ax,6
+
+			mgetxy 175,48
+			mov posicion[0],ax
 
         ;Fin Codigo--
 
@@ -475,8 +474,11 @@ include mjuego.asm
         ;Fin Subrutina prologo
 
         ;Ini Codigo--
-        	mAvanzaPelota
+
         	mDelay 150
+        	mAvanzaPelota
+        	
+
 
         ;Fin Codigo--
 

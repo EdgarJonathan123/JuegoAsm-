@@ -34,7 +34,6 @@
         		dec di
         		jnz D2
         		jmp D1
-
         ;Fin Codigo--
 
         ;ini Subrutina epilogo
@@ -44,7 +43,6 @@
 				ret
             ;fin etiqueta
         ;fin Subrutina epilogo
-
 	delay endp
 
 	Str_length proc

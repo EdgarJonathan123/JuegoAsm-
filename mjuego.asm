@@ -5,7 +5,6 @@
         call tolineal
     endm
 
-
     mgetxy macro posicion
         push posicion
         call getxy
@@ -47,16 +46,16 @@
     endm
 
 
-    mAvanzaPelota macro 
+
+    mavanzaPelota macro 
         call avanzaPelota
     endm
 
-    mMover macro 
-        call mover
-    endm
 
+    mMovimiento macro 
+        call movimiento
+    endm 
 ;====================Ini Pantalla====================
-
 
 ;====================Ini Juego====================
     mSetup macro
@@ -70,4 +69,16 @@
     mInstrucciones macro 
         call Instrucciones
     endm
+
+    mMover macro 
+        call mover
+    endm
+
+    mMoverBarra macro 
+        call moverBarra
+    endm
+
+   ;mColisionBarra macro
+   ;    call ColisionBarra
+   ;endm
 ;====================Fin Juego====================

@@ -179,8 +179,8 @@ include mjuego.asm
         ;fin Surutina prologo
 
         ;Ini Codigo--
-        	mov word ptr[bp-2],200				;Numero de Columnas
-        	mov word ptr[bp-4],7				;Numero de Filas
+        	mov word ptr[bp-2],30				;Numero de Columnas
+        	mov word ptr[bp-4],4				;Numero de Filas
         	xor bx,bx
         	xor ax,ax
 
@@ -423,6 +423,71 @@ include mjuego.asm
             ;fin etiqueta
         ;fin Subrutina epilogo
 	avanzaPelota endp
+
+    moverBarra proc
+        ;--------------------------------------------------------------------
+        ;   Recibe:      bx = posicion                                                                    
+        ;   Devuelve:    Nada                                                
+        ;                                                                    
+        ;   Comentarios: Cambia el                       
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+            push ax
+            push bx
+        
+        ;ini Subrutina prologo
+
+        ;Ini Codigo--
+            call listening
+            cmp al,04dh                 ;derehcha
+            je moverDerecha
+            cmp al,04bh                 ;izquierda
+            je moverIzquierda
+            jmp FIN
+
+
+           
+
+            moverDerecha:
+                mov bx,posBarra[0]
+                mgetxy bx 
+                add cx,29
+                cmp cx,LimiteDerecho
+                je FIN
+
+                mPintarBarra bx,0
+                add bx,6
+                mPintarBarra bx,6
+                mov posBarra[0],bx
+                jmp FIN
+            ;fin
+            moverIzquierda:
+                mov bx,posBarra[0]
+                mgetxy bx
+                cmp cx, 6
+                je FIN
+
+
+                mPintarBarra bx,0
+                sub bx,6
+                mPintarBarra bx,6
+                mov posBarra[0],bx
+                jmp FIN
+            ;fin
+
+
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                pop bx
+                pop ax
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+    moverBarra endp
 ;====================Fin Loop======================================
 
 ;====================Ini Instrucciones======================================
@@ -444,11 +509,11 @@ include mjuego.asm
         	ModoVideo
 			mPintarMargen 5
 
-			mtolineal 180,40
+			mtolineal 180,12
 			mov posBarra[0],ax
 			mPintarBarra ax,6
 
-			mgetxy 175,48
+			mtolineal 175,48
 			mov posicion[0],ax
 
         ;Fin Codigo--
@@ -477,6 +542,7 @@ include mjuego.asm
 
         	mDelay 150
         	mAvanzaPelota
+            mMoverBarra
         	
 
 
@@ -489,6 +555,5 @@ include mjuego.asm
                 ret 
         ;fin Subrutina epilogo
 	instrucciones endp
-
 ;====================Fin Instrucciones======================================
 

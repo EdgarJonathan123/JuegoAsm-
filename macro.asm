@@ -23,6 +23,16 @@ iniciarDs macro
 endm
 
 
+mWrite macro texto
+    LOCAL cadena
+    .data
+        cadena byte texto,'$'
+    .code
+        push offset cadena
+        call WriteString
+endm
+
+
 ModoVideo macro
     mov ah,00h
     mov al,13h

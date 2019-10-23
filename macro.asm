@@ -71,3 +71,20 @@ print macro cadena
     push offset cadena
     call WriteString
 endm
+
+printReg macro parameter1
+        push ax     
+        mov ax,parameter1
+        call toAscii
+        print corA
+        print Num
+        print corC
+        pop ax
+endm
+
+Ascii macro parameter1
+    push ax     
+    mov ax,parameter1
+    call toAscii
+    pop ax
+endm

@@ -3,7 +3,11 @@ include mjuego.asm
 .data
 ;====================Ini Var Globales=============================
 	salidaJuego 	word 	0
-	
+    terminoJuego    word    0
+
+    anchoBarra      = 30
+    alturaBarra     = 3	
+
 
 	LimiteIzquierdo =	6d  				;margen Izquierdo
 	LimiteDerecho	=	311d				;margen derecho
@@ -11,94 +15,18 @@ include mjuego.asm
 	LimiteInferior	=	187d				;margen inferior
 
 	estado 			word 	1d 				;estado de direccion de la pelota
+    ;                1 = NorEste
+    ;                2 = NorOeste
+    ;                3 = SurOeste
+    ;                4 = SurEste    
 	direccion 		word 	0d
 	posicion 		word 	0d
 	posBarra 		word	0d
-
-
-	prueba 			db 'esto es una prueba',13,10,'$'
 ;====================Fin Var Globales=============================
 
 .code
 ;====================Ini Conversiones=============================
-	tolineal proc
-        ;--------------------------------------------------------------------;
-        ;   Recibe:      DS:[bp+4]  col                          		     ;
-        ;                DS:[bp+6]  fila                                     ;
-        ;                                                                    ;
-        ;   Devuelve:    AX=coordenada mapeada                               ;
-        ;                                                                    ;
-        ;   Comentarios: mapea coordenadas					                 ;
-        ;--------------------------------------------------------------------;
 
-        ;ini Subrutina proglogo
-            push bp                    ;almacenamos el puntero base
-            mov  bp,sp                 ;ebp contiene la direccion de esp
-			push bx
-			push dx
-			push cx
-        ;fin Surutina prologo
-
-        ;Ini Codigo--
-            
-            mov bx,[bp+4]              ;bx = col
-            mov ax,[bp+6]              ;ax = fila
-			mov cx,320d
-			mul cx
-			add ax,bx
-
-        ;Fin Codigo--
-
-        ;ini Subrutina epilogo
-            FIN:
-				pop cx
-				pop dx
-				pop bx
-                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
-                pop bp                  ;restaura el valor del puntro base listo para el ret
-                ret 4
-            ;fin etiqueta
-        ;fin Subrutina epilogo
-    tolineal endp
-
-	getxy proc  
-	    ;--------------------------------------------------------------------
-        ;   Recibe:      DS:[bp+4]  posicion absoluta                    		     
-        ;                                                                    
-        ;   Devuelve:    AX=Fila     
-		;				 CX=Columna                      
-        ;                                                                    
-        ;   Comentarios: Dada una posicion absoluta se determina 
-		;				 la fila y columna				                 
-        ;--------------------------------------------------------------------
-
-        ;ini Subrutina proglogo
-            push bp                    ;almacenamos el puntero base
-            mov  bp,sp                 ;ebp contiene la direccion de esp
-			push dx
-			push bx
-        ;fin Surutina prologo
-
-        ;Ini Codigo--
-            mov dx,0				   	;limpiamos dividendo, superior
-            mov ax,word ptr[bp+4]       ;ax = posicion absoluta, divendo inferior
-            mov bx,320d					;divisor
-
-			div bx
-            mov cx,dx
-
-        ;Fin Codigo--
-
-        ;ini Subrutina epilogo
-            FIN:
-				pop bx
-				pop dx
-                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
-                pop bp                  ;restaura el valor del puntro base listo para el ret
-                ret 2
-            ;fin etiqueta
-        ;fin Subrutina epilogo
-	getxy endp
 
 	pintarMargen proc 
 	    ;--------------------------------------------------------------------
@@ -179,8 +107,8 @@ include mjuego.asm
         ;fin Surutina prologo
 
         ;Ini Codigo--
-        	mov word ptr[bp-2],30				;Numero de Columnas
-        	mov word ptr[bp-4],4				;Numero de Filas
+        	mov word ptr[bp-2],anchoBarra			;Numero de Columnas
+        	mov word ptr[bp-4],alturaBarra			;Numero de Filas
         	xor bx,bx
         	xor ax,ax
 
@@ -341,6 +269,11 @@ include mjuego.asm
         ;ini Subrutina prologo
 
         ;Ini Codigo--
+
+            mov bx,terminoJuego[0]
+            cmp bx,1                                    ;¿terminoJuego = true?
+            je FIN
+
         	mov bx,posicion[0]
         	mov ax,estado[0]
 
@@ -368,7 +301,7 @@ include mjuego.asm
 				mMover
 				mgetxy bx
 				cmp ax,LimiteInferior					;¿fila = limite inferior?
-				je EstadoNoreste				
+				je perder				
 				cmp cx,LimiteDerecho					;Columna = limite Derecho?	
 				je EstadoSurOeste
 
@@ -389,11 +322,14 @@ include mjuego.asm
 				mMover
 				mgetxy bx
 				cmp ax,LimiteInferior					;¿fila = limite inferior?
-				je EstadoNorOeste
+				je perder
 				cmp cx,LimiteIzquierdo					;¿columna = limite izquierdo?
 				je EstadoSurEste
 				jmp FIN
 			;fin
+
+
+
 
 
 			EstadoSurEste:
@@ -413,6 +349,13 @@ include mjuego.asm
 				jmp FIN
 			;fin
 
+
+            perder:
+                mpintarPelota bx,0
+                mov terminoJuego[0],1
+                jmp FIN
+            ;fin
+
         ;Fin Codigo--
 
         ;ini Subrutina epilogo
@@ -426,10 +369,11 @@ include mjuego.asm
 
     moverBarra proc
         ;--------------------------------------------------------------------
-        ;   Recibe:      bx = posicion                                                                    
+        ;   Recibe:      Nada                                                                  
         ;   Devuelve:    Nada                                                
         ;                                                                    
-        ;   Comentarios: Cambia el                       
+        ;   Comentarios: Se lee si se presiono una tecla
+        ;                si se presiono se mueve la barrita                       
         ;--------------------------------------------------------------------
 
         ;ini Subrutina proglogo
@@ -488,6 +432,68 @@ include mjuego.asm
             ;fin etiqueta
         ;fin Subrutina epilogo
     moverBarra endp
+
+    colisionBarra proc 
+        ;--------------------------------------------------------------------
+        ;   Recibe:      Nada                                                                  
+        ;   Devuelve:    Nada                                                
+        ;                                                                    
+        ;   Comentarios: se varifica una colision con la barrita
+        ;                si colisiona se cambia la direccion                   
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+            push ax
+            push bx
+            push cx
+        ;ini Subrutina prologo
+
+        ;Ini Codigo--
+            ;25 columnas
+            verficaPosicion:
+                mov bx,posicion[0]
+                add bx,960
+                mov ax,posBarra[0]
+                mov cx,anchoBarra               ;25 columnas
+                add cx,ax
+
+
+                cmp bx,ax                       ;¿bx es menor que ax?
+                jb FIN                          ;si: no hace nada 
+                cmp bx,cx                       ;¿bx es mayor que cx?
+                ja FIN                          ;si: no hace nada
+
+
+                mov ax,estado[0]
+                cmp ax,3                        ;estado=SurOeste
+                je EstadoNorOeste
+                cmp ax,4                        ;estado=SurEste
+                je EstadoNorEste
+
+                jmp FIN
+           ;Fin de etiqueta
+
+           EstadoNoreste:
+                mov estado[0],1                 ;estado=NorEste
+                jmp FIN
+           ;fin etiqueta
+
+           EstadoNorOeste:
+                mov estado[0],2                 ;estado=NorOeste
+                jmp FIN
+           ;fin etiqueta
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                pop cx
+                pop bx
+                pop ax
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+    colisionBarra endp
 ;====================Fin Loop======================================
 
 ;====================Ini Instrucciones======================================
@@ -541,8 +547,11 @@ include mjuego.asm
         ;Ini Codigo--
 
         	mDelay 150
+            
         	mAvanzaPelota
+            mColisionBarra
             mMoverBarra
+            
         	
 
 

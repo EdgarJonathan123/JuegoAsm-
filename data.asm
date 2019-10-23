@@ -5,3 +5,6 @@
 	;MENU PRINCIPAL
 	enc1 db 0ah,0dh, '	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%',0ah,0dh,'	%%%%%%% MENU PRINCIPAL %%%%%%%',0ah,0dh,'	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%',0ah,0dh,'	%%%% 1. VIDEO             %%%%',0ah,0dh,'	%%%% 2. IMPRIMIR          %%%%',0ah,0dh,'	%%%% 3. SALIR             %%%%',0ah,0dh,'	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%','$'
 
+	Num db 100 dup('$')
+	corA db 91,'$'
+    corC db 93,'$'

@@ -78,7 +78,7 @@
         call moverBarra
     endm
 
-   ;mColisionBarra macro
-   ;    call ColisionBarra
-   ;endm
+   mColisionBarra macro
+       call ColisionBarra
+   endm
 ;====================Fin Juego====================

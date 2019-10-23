@@ -1,10 +1,9 @@
 
 	salt db 0ah,0dh, '	','$'
 	;ENCABEZADO
-	enc0 db 0ah,0dh, '	UNIVERSIDAD DE SAN CARLOS DE GUATEMALA',0ah,0dh,'	FACULTAD DE INGENIERIA', 0ah,0dh, '	ESCUELA DE CIENCIAS Y SISTEMAS',0ah,0dh, '	ARQUITECTURA DE COMPUTADORES Y ENSAMBLADORES 1 A',0ah,0dh, '	SEGUNDO SEMESTRE 2019',0ah,0dh, '	OSCAR RENE CUELLAR MANCILLA',0ah,0dh, '	201503712',0ah,0dh, '	EJEMPLO MODO VIDEO','$'
-	;MENU PRINCIPAL
-	enc1 db 0ah,0dh, '	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%',0ah,0dh,'	%%%%%%% MENU PRINCIPAL %%%%%%%',0ah,0dh,'	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%',0ah,0dh,'	%%%% 1. VIDEO             %%%%',0ah,0dh,'	%%%% 2. IMPRIMIR          %%%%',0ah,0dh,'	%%%% 3. SALIR             %%%%',0ah,0dh,'	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%','$'
-
+	msm0     db  9,9,'***UNIVERSIDAD DE SANCARLOS DE GUATEMALA***',13,10,9,9,'FACULTAD DE INGENIERIA',13,10,9,9,'CIENCIAS Y SISTEMAS',13,10,9,9,'ARQUITECTURA DE COMPUTADORES  Y ENSAMBLADORES 1',13,10,9,9,'SECCION B',13,10,9,9,'NOMBRE: EDGAR JONATHAN ARRECIS MARTINEZ',13,10,9,9,'CARNTE: 201602633',13,10,9,9,'TAREA PRACTICA 5',13,10,'$'
+    msm8     db   13,10,9,9,'****Menu Principal *****',13,10,9,9,'1) Ingreso Usuario ',13,10,9,9,'2) Registro Usuario',13,10,9,9,'3) Ingreso Admin',13,10,9,9,'4) Salir','$'
+ 
 	Num db 100 dup('$')
 	corA db 91,'$'
     corC db 93,'$'

@@ -6,6 +6,8 @@
     endm
 
     mgetxy macro posicion
+
+        ;PrintReg posicion
         push posicion
         call getxy
     endm
@@ -36,18 +38,46 @@
     mPintarBarra macro pos,color
         push di 
         push dx
+        push ax
+        push bx
 
         mov di,pos
         mov dl,color
+        mov ax,anchoBarra
+        mov bx,alturaBarra
         call pintarBarra
 
+        pop bx
+        pop ax
+        pop dx
+        pop di
+    endm
+
+
+    mPintarObstaculo macro pos,color,alto,ancho
+        push di 
+        push dx
+        push ax
+        push bx
+
+        mov di,pos
+        mov dl,color
+        mov ax,ancho
+        mov bx,alto
+        call pintarBarra
+
+        pop bx
+        pop ax
         pop dx
         pop di
     endm
 
 
 
-    mavanzaPelota macro 
+
+    mavanzaPelota macro pos,state
+        push offset state
+        push offset pos
         call avanzaPelota
     endm
 
@@ -70,7 +100,9 @@
         call Instrucciones
     endm
 
-    mMover macro 
+    mMover macro pos,state
+        push state
+        push pos
         call mover
     endm
 
@@ -78,7 +110,20 @@
         call moverBarra
     endm
 
-   mColisionBarra macro
-       call ColisionBarra
+   mColisionBarra macro pos, state
+        push offset state
+        push offset pos 
+        call ColisionBarra
+   endm
+
+
+   mGenerarObstaculo macro pos,color
+        push pos
+        push color
+        call GenerarObstaculo
+   endm
+
+   mPintarNivel macro 
+        call pintarNivel
    endm
 ;====================Fin Juego====================

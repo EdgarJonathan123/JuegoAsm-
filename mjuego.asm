@@ -171,4 +171,20 @@
         call pintarNivel
     endm
 
+    mDeleteBlock macro pos
+        push pos
+        call deleteBlock
+    endm
+
+
+    mDeleteDerecha macro pos
+        push pos
+        call DeleteDerecha
+    endm
+
+
+    mDeleteIzquierda macro pos
+        push pos
+        call DeleteIzquierda
+    endm
 ;====================Fin Juego====================

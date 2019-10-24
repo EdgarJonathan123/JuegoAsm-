@@ -3,6 +3,32 @@ include mjuego.asm
 .data
 ;====================Ini Var Globales=============================
 
+    ;Colores
+    Negro           =   0d
+    Azul            =   1d
+    Verde           =   2d
+    Cyan            =   3d
+    Rojo            =   4d
+    Magenta         =   5d
+    Cafe            =   6d
+    GrisClaro       =   7d
+    Gris            =   8d
+    AzulClaro       =   9d
+    VerdeClaro      =   10d
+    CyanClaro       =   11d
+    RojoClaro       =   12d
+    MagentaClaro    =   13d
+    Amarillo        =   14d
+    Blanco          =   15d
+
+    ;Direcciones
+    DirNorEste      =   1d
+    DirNorOeste     =   2d
+    DirSurOeste     =   3d
+    DirSurEste      =   4d
+
+
+
     ;ESTADO DEL JUEGO
 	salidaJuego 	word 	0
     terminoJuego    word    0
@@ -30,6 +56,7 @@ include mjuego.asm
     ;                2 = NorOeste
     ;                3 = SurOeste
     ;                4 = SurEste    
+
 
 
     ;NIVELES DEL jUEGO
@@ -373,10 +400,6 @@ include mjuego.asm
 				jmp FIN
 			;fin
 
-
-
-
-
 			EstadoSurEste:
 				mov word ptr[di],4						;4=SurEste
 				jmp FIN
@@ -515,9 +538,9 @@ include mjuego.asm
 
 
                 cmp bx,ax                       ;¿posicion pelotita es menor que posicion inicial barra?
-                jb FIN                          ;si: no hace nada 
+                jb VerificaObstaculo            ;si: no hace nada 
                 cmp bx,cx                       ;¿posicion pelotita es mayor que posicion Final barra?
-                ja FIN                          ;si: no hace nada
+                ja VerificaObstaculo            ;si: no hace nada
 
 
                 mov ax,[di]                     ;ax= estado
@@ -526,7 +549,7 @@ include mjuego.asm
                 cmp ax,4                        ;estado=SurEste
                 je EstadoNorEste
 
-                jmp FIN
+                jmp VerificaObstaculo
            ;Fin de etiqueta
 
            EstadoNoreste:
@@ -538,6 +561,90 @@ include mjuego.asm
                 mov word ptr[di],2                 ;estado=NorOeste
                 jmp FIN
            ;fin etiqueta
+
+
+
+            VerificaObstaculo:
+                mov bx,[si]
+
+
+                sub bx,1
+                mov al,es:[bx]
+                cmp al,Cyan                    ;al compara 3
+                je DeleteLateral
+
+                sub bx,319
+                mov al,es:[bx]
+                cmp al,Cyan                    ;al compara 3
+                je DeleteFrontal
+
+                ;jb FIN                      ;al es menor a 3,No se hace Nada
+                ;ja FIN                      ;al es mayor a 3,No se hace Nada
+                ;Si es es igual a 3
+
+                jmp FIN
+            ;fin
+
+            DeleteFrontal:
+
+
+                mov cx,bx                     ;bx=iterador,cx=valor fijo
+                 
+
+
+                C1:
+                    inc bx
+                    mov al,es:[bx]
+                    cmp al,Negro
+                    je Aumentar
+
+                    mov al,Negro
+                    mov es:[bx],al
+                    jmp C1
+                ;fin
+
+                Aumentar:
+                    mov bx,cx
+
+                C2:
+                    dec bx
+                    mov al,es:[bx]
+                    cmp al,Cyan
+                    jb Fuera                     ;Si es menor a cyan sale del Bucle
+                    ja Fuera                     ;Si es mayor a cyan sale del bucle
+
+                    mov al,Negro
+                    mov es:[bx],al
+                    jmp C2
+                ;fin
+
+                Fuera:
+                ;fin
+
+                cmp word ptr[di],DirNorEste                ;¿Viene del NorEste?
+                je EstadoSurEste
+                cmp word ptr[di],DirNorOeste               ;¿Viene del NorEste?
+                je EstadoSurOeste
+
+                jmp FIN
+            ;fin
+
+
+            EstadoSurOeste:
+                mov ax,DirSurOeste
+                mov word ptr[di],ax
+                jmp FIN
+            ;FIN
+
+            EstadoSurEste:
+                mov ax,DirSurEste
+                mov word ptr[di],ax
+                jmp FIN
+            ;fin
+
+            DeleteLateral:
+                jmp FIN
+            ;fin
 
         ;Fin Codigo--
 
@@ -617,9 +724,9 @@ include mjuego.asm
 
         ;Ini Codigo--
             mov bx,25
-            mGenerarObstaculo bx,3  
+            mGenerarObstaculo bx,Cyan  
             add bx,13   
-            mGenerarObstaculo bx,3      
+            mGenerarObstaculo bx,Cyan      
 
         ;Fin Codigo--
 
@@ -644,13 +751,13 @@ include mjuego.asm
         ;Ini Codigo--
 
             mov bx,25
-            mGenerarObstaculo bx,3   
+            mGenerarObstaculo bx,Cyan   
             add bx,13   
-            mGenerarObstaculo bx,3 
+            mGenerarObstaculo bx,Cyan 
             add bx,13   
-            mGenerarObstaculo bx,3   
+            mGenerarObstaculo bx,Cyan   
             add bx,13   
-            mGenerarObstaculo bx,3        
+            mGenerarObstaculo bx,Cyan        
 
         ;Fin Codigo--
 
@@ -676,15 +783,15 @@ include mjuego.asm
         ;Ini Codigo--
 
             mov bx,25
-            mGenerarObstaculo bx,3   
+            mGenerarObstaculo bx,Cyan  
             add bx,13   
-            mGenerarObstaculo bx,3 
+            mGenerarObstaculo bx,Cyan
             add bx,13   
-            mGenerarObstaculo bx,3   
+            mGenerarObstaculo bx,Cyan
             add bx,13   
-            mGenerarObstaculo bx,3        
+            mGenerarObstaculo bx,Cyan     
             add bx,13   
-            mGenerarObstaculo bx,3
+            mGenerarObstaculo bx,Cyan
         ;Fin Codigo--
 
         ;ini Subrutina epilogo
@@ -750,7 +857,6 @@ include mjuego.asm
                 ret 
         ;fin Subrutina epilogo
     pintarNivel endp
-
 ;====================Fin Niveles===================================
 
 ;====================Ini Instrucciones=============================
@@ -770,7 +876,7 @@ include mjuego.asm
 
         ;Ini Codigo--
         	ModoVideo
-			mPintarMargen 5
+			mPintarMargen MagentaClaro
 
 			mov Nivel[0],3
             mov cambioNivel[0],1
@@ -779,7 +885,7 @@ include mjuego.asm
 
             mtolineal 180,12
             mov posBarra[0],ax
-            mPintarBarra ax,6
+            mPintarBarra ax,Rojo
 
 
             mov estado[0],1                 ;Se inicia en NorEste
@@ -787,13 +893,13 @@ include mjuego.asm
 			mov posicion[0],ax              ;define la posicion inical de la pelotita
 
 
-            mov estado1[0],2                 ;Se inicia en NorEste
-            mtolineal 150,60
-            mov posicion1[0],ax              ;define la posicion inical de la pelotita
-
-            mov estado2[0],2                 ;Se inicia en NorEste
-            mtolineal 120,100
-            mov posicion2[0],ax              ;define la posicion inical de la pelotita
+            ;mov estado1[0],2                 ;Se inicia en NorEste
+            ;mtolineal 150,60
+            ;mov posicion1[0],ax              ;define la posicion inical de la pelotita
+            ;
+            ;mov estado2[0],2                 ;Se inicia en NorEste
+            ;mtolineal 120,100
+            ;mov posicion2[0],ax              ;define la posicion inical de la pelotita
 
         ;Fin Codigo--
 
@@ -834,18 +940,18 @@ include mjuego.asm
             ;fin etiqueta
 
         	c1:
-                ;mPintarNivel 
-                mDelay 120
+                mPintarNivel 
+                mDelay 180 
         	    mAvanzaPelota posicion,estado
                 mColisionBarra posicion,estado
 
-                mAvanzaPelota posicion1,estado1
-                mColisionBarra posicion1,estado1
-
-                mAvanzaPelota posicion2,estado2
-                mColisionBarra posicion2,estado2
-                
-                mMoverBarra
+               ;mAvanzaPelota posicion1,estado1
+               ;mColisionBarra posicion1,estado1
+               ;
+               ;mAvanzaPelota posicion2,estado2
+               ;mColisionBarra posicion2,estado2
+               
+               mMoverBarra
                 
                 jmp FIN
             ;fin etiqueta

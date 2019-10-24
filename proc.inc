@@ -186,7 +186,6 @@
         ret 2
     WriteString endp
 
-	
     toAscii proc
         ;--------------------------------------------------------------------
         ;   Recibe:      AX = Numero decimal                                                
@@ -267,7 +266,6 @@
         ;fin Subrutna epilogo
     toAscii endp
 
-
     Clear_String proc
         ;--------------------------------------------------------------------;
         ;   Recibe:      DS:[bp+4] cadena                                    ;
@@ -310,3 +308,21 @@
             ;fin etiqueta
         ;fin Subrutna epilogo
     Clear_String endp
+
+    ResetCursor proc
+        push ax
+        push bx
+        push dx
+
+        mov ah , 02H        ;MOVE CURSOR TO CENTER OF SCREEN
+        mov bh , 0          ;pagina 
+        mov dh , 1          ;ROW
+        mov dl , 1          ;COL
+        int 10h
+
+        FIN:
+            pop dx
+            pop bx
+            pop ax
+            ret
+    ResetCursor endp

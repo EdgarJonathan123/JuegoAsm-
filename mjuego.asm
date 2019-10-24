@@ -85,6 +85,50 @@
     mMovimiento macro 
         call movimiento
     endm 
+
+
+    Print_VideoString macro cadena , pagina , fila  , columna
+
+      push      dx
+      push      ax
+      push      cx
+      
+      mov       ah, 2                           ; modo de escritura con el puntero en modo video 
+      mov       bh, pagina                      ; numero de pagina 
+      mov       dh, fila                        ; numero de fila 
+      mov       dl, columna                     ; numero columna 
+      int       10h                             ; ejecucion de la interrupcion 
+
+      mov       dx, offset cadena               ; tamañ de la cadena 
+      mov       ax, dx
+      mov       cl, 0ah
+      mul       cl
+      mov       ah, 00h
+      add       ax, dx
+      mov       dx, ax
+
+      mov       ah, 09h
+      int       21h
+
+      pop       cx
+      pop       ax
+      pop       dx
+
+    endm
+
+
+
+    imprimir macro 
+        mov dh, 1   ; posicion y en pantalla
+        mov dl, 35   ; posicion x en pantalla
+        mov ah, 02h
+        int 10h
+        mov     al, 'A' ;char a dibujar
+        mov     ah, 09h
+        mov     bl, 6 ; attribute color.
+        mov     cx, 1   ; solo un char.
+        int     10h
+    endm
 ;====================Ini Pantalla====================
 
 ;====================Ini Juego====================
@@ -110,20 +154,21 @@
         call moverBarra
     endm
 
-   mColisionBarra macro pos, state
+    mColisionBarra macro pos, state
         push offset state
         push offset pos 
         call ColisionBarra
-   endm
+    endm
 
 
-   mGenerarObstaculo macro pos,color
+    mGenerarObstaculo macro pos,color
         push pos
         push color
         call GenerarObstaculo
-   endm
+    endm
 
-   mPintarNivel macro 
+    mPintarNivel macro 
         call pintarNivel
-   endm
+    endm
+
 ;====================Fin Juego====================

@@ -88,3 +88,7 @@ Ascii macro parameter1
     call toAscii
     pop ax
 endm
+
+mResetCursor macro
+    call ResetCursor
+endm

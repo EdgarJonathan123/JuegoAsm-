@@ -13,14 +13,31 @@ main proc
 		;--------OBTENIENDO EL NUMERO ESCOGIDO------------------------
 		getChar
 		cmp al,'1'; COMPARO CON EL ASCII DEL NUMERO 1 QUE ES 49 Y EN HEXA `31H
-		je Video1
+		je juego
+		cmp al,'2'
+		je regUsuario
+		cmp al,'3'
+		je IngresoAdmin
 		cmp al,'4'
 		je Salir
 		jmp MenuPrincipal
 	;fin etiqueta
 
-	Video1:
-	
+
+
+	IngresoUsuario:
+		jmp salir
+	;fin etiqueta
+	regUsuario:
+		mRegistrarUsuario
+		jmp salir
+	;fin etiqueta
+	IngresoAdmin:
+		jmp salir
+	;fin etiqueta
+
+
+	juego:
 		mSetup
 		mGame
 
@@ -28,7 +45,6 @@ main proc
 		mov terminoJuego[0],0				;se puede inicial el juego de nuevo
 		ModoTexto
 		jmp MenuPrincipal
-
 	;fin etiqueta
 
 

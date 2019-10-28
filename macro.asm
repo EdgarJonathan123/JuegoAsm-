@@ -72,6 +72,13 @@ print macro cadena
     call WriteString
 endm
 
+printDir macro parameter1
+    
+    push parameter1
+    call WriteString
+
+endm 
+
 printReg macro parameter1
         push ax     
         mov ax,parameter1
@@ -89,6 +96,28 @@ Ascii macro parameter1
     pop ax
 endm
 
-mResetCursor macro
-    call ResetCursor
+mSetCursor macro fila,columna
+    push fila 
+    push columna
+    call SetCursor
+endm
+
+
+read macro cadena
+        mov dx,offset   cadena
+        mov cx,lengthof cadena
+        call ReadString
+endm
+
+println macro cadena
+        print cadena
+        print salt
+endm
+
+
+Ascii macro parameter1
+        push ax     
+        mov ax,parameter1
+        call toAscii
+        pop ax
 endm

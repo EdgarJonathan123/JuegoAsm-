@@ -1,5 +1,160 @@
 
 .code 
+
+    Compare_String proc 
+        ;--------------------------------------------------------------------;
+        ;   Recibe:      DS:[bp+4] string1                                   ;
+        ;                DS:[bp+6] string2                                   ;
+        ;                                                                    ;
+        ;   Devuelve:    nada                                                ;
+        ;                                                                    ;
+        ;   Comentarios: Afecta las banderas cero y acarrero                 ;
+        ;                de la misma forma que la instruccion cmp.           ;
+        ;                                                                    ;   
+        ;   string1 < string2:  -> jb                                        ;
+        ;       bandera acarrero = 1                                         ;
+        ;       bandera Cero     = 0                                         ;
+        ;                                                                    ;
+        ;   string1 == string2: -> je                                        ;
+        ;       bandera acarrero = 0                                         ;
+        ;       bandera Cero     = 1                                         ;
+        ;                                                                    ;
+        ;   string1 > string2:  -> ja                                        ;
+        ;       bandera acarrero = 0                                         ;
+        ;       bandera Cero     = 0                                         ;
+        ;                                                                    ;
+        ;--------------------------------------------------------------------;
+
+        ;ini Subrutina proglogo
+            push bp                    ;almacenamos el puntero base
+            mov  bp,sp                 ;ebp contiene la direccion de esp
+            push ax
+            push dx
+            push si
+            push di
+        ;fin Subrutina prologo
+
+        ;Ini Codigo--
+            mov si,[bp+4]                           ;si = string1
+            mov di,[bp+6]                           ;si = string2
+
+            L1:
+                
+                mov al,byte ptr[si]                 ;al = string1[si]
+                mov dl,byte ptr[di]                 ;sl = string2[di]
+
+                cmp al,'$'                            ;¿Final de string1?
+                jne L2                              ;no
+                cmp dl,'$'                            ;si: ¿final de string2?
+                jne L2                              ;no
+                jmp FIN                             ;si, termina con ZF=1
+            ;fin
+
+            L2:
+                inc si                              ;apunta al siguiente
+                inc di 
+                cmp al,dl                           ;¿los caracteres son iguales?
+                je L1                               ;si: continua el ciclo
+                                                    ;no: termina con las banderas activadas 
+            ;fin
+    
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                pop di
+                pop si
+                pop dx
+                pop ax
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 2
+            ;fin etiqueta
+        ;fin Subrutna epilogo
+    Compare_String endp
+
+    Copy_String proc
+        ;--------------------------------------------------------------------;
+        ;   Recibe:      DS:[bp+6]  inicio token2                            ;
+        ;                DS:[bp+4]  inicio token1                            ;
+        ;                                                                    ;
+        ;   Devuelve:    Solo afecta las cadenas enviadas                    ;
+        ;                                                                    ;
+        ;   Comentarios: Copia token1 a token2                               ;
+        ;--------------------------------------------------------------------;
+
+        ;ini Subrutina proglogo
+            push bp                    ;almacenamos el puntero base
+            mov  bp,sp                 ;ebp contiene la direccion de esp
+            pusha                      ;guarda los registros multiproposito
+            mov di,[bp+4]              ;di = direccion inicio token1
+            mov si,[bp+6]              ;si = direccion inicio token2
+            jmp COPIA
+        ;fin Surutina prologo
+
+        ;Ini Codigo--
+            COPIA:
+                cmp byte ptr[di],'$'            ;¿termina el token 1?
+                je FIN                          ;si: termina la copia
+
+                mov al,byte ptr[di]
+                mov byte ptr[si],al
+
+                inc di
+                inc si
+                jmp COPIA
+            ;fn etiqueta
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                popa                    ;obtenemos el valor devuelta
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 4
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+    Copy_String endp
+
+    ReadString proc
+        ;---------------------------------------------------------------;
+        ;   Recibe:     DS:DX apunta al bufer de entrada,              ;
+        ;               CX= maximo de caracteres de entrada.            ;
+        ;                                                               ;
+        ;   Devuelve:   AX= tamana de la cadena de entrada.             ;
+        ;                                                               ;
+        ;   Comentarios:Se detiene cuando se oprime Intro(0dh),         ;
+        ;               o cuando se leen (CX-1) caracateres.            ;
+        ;---------------------------------------------------------------;
+
+        push cx                     ;guarda los registros
+        push si
+        push cx                     ;guarda la cuenta de digitos otra vez
+        mov si,dx                   ;apunta al buffer de entrada
+        dec cx                      ;guarda el spacio para el byte nulo
+
+        L1:
+            mov ah,1                ;funcionn de entrada del teclado
+            int 21h                 ;DOS devuelve el caracter en AL
+            cmp al,0dh              ;¿fin de linea?
+            je L2                   ;si: termina
+            mov [si],al             ;no: guarda el caracter
+            inc si                  ;incrementa el apuntador al bufer
+            loop L1                 ;itera hasta CX = 0
+
+        L2:
+            mov byte ptr[si],0      ;termina con un byte nulo
+            pop ax                  ;cuenta de digitos original
+            sub ax,cx               ;AX= tamanio de la cadena de entrada
+            dec ax
+            pop si                  ;restaura los registros
+            pop cx
+
+        ret
+    ReadString endp
+
+    
 	listening proc
 		mov ah,06h
 		mov dl,0ffh
@@ -308,20 +463,41 @@
         ;fin Subrutna epilogo
     Clear_String endp
 
-    ResetCursor proc
-        push ax
-        push bx
-        push dx
+    SetCursor proc
+        ;--------------------------------------------------------------------
+        ;   Recibe:      [bp+4] columna
+        ;                [bp+6] fila                                
+        ;                                                                    
+        ;   Devuelve:    nada                                                
+        ;                                                                    
+        ;   Comentarios: Setea el cursor en la fila y columna enviada                             
+        ;--------------------------------------------------------------------
 
-        mov ah , 02H        ;MOVE CURSOR TO CENTER OF SCREEN
-        mov bh , 0          ;pagina 
-        mov dh , 1          ;ROW
-        mov dl , 1          ;COL
-        int 10h
+        ;ini Subrutina proglogo
+            push bp                    ;almacenamos el puntero base
+            mov  bp,sp                 ;ebp contiene la direccion de esp
+            push ax
+            push bx
+            push dx
+        ;fin Subrutina prologo
 
-        FIN:
-            pop dx
-            pop bx
-            pop ax
-            ret
-    ResetCursor endp
+        ;Ini Codigo--
+            mov ah , 02H                    ;MOVE CURSOR TO CENTER OF SCREEN
+            mov bh , 0                      ;pagina 
+            mov dh , byte ptr[bp+6]         ;ROW
+            mov dl , byte ptr[bp+4]         ;COL
+            int 10h
+        ;Fin Codigo--
+
+
+        ;ini Subrutina epilogo
+            FIN:
+                pop dx
+                pop bx
+                pop ax
+                mov sp,bp               ;esp vuelve apuntar al inicio y elimina las variables locales
+                pop bp                  ;restaura el valor del puntro base listo para el ret
+                ret 4
+            ;fin etiqueta
+        ;fin Subrutna epilogo
+    SetCursor endp

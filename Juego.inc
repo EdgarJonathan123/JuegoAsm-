@@ -3,8 +3,10 @@ include mjuego.asm
 .data
 ;====================Ini Var Globales=============================
 
-    gameText db 'User1    N1   0000  00:00:01','$'
-    
+    gameText db 'User1             N1     0      00:00:03','$'
+    punteo  word 0
+
+
     ;Variables Boolenas
         TRUE        =   1d
         FALSE       =   2D
@@ -890,6 +892,7 @@ include mjuego.asm
    
 
             EstadoNorEste:
+                call aumentaPunto
                 mDeleteBlock bx
                 mov ax,DirNorEste
                 mov word ptr[di],ax                 
@@ -897,6 +900,7 @@ include mjuego.asm
            ;fin etiqueta
 
            EstadoNorOeste:
+                call aumentaPunto
                 mDeleteBlock bx
                 mov ax,DirNorOeste
                 mov word ptr[di],ax                 
@@ -904,6 +908,7 @@ include mjuego.asm
            ;fin etiqueta
 
            EstadoSurEste:
+                call aumentaPunto
                 mDeleteBlock bx
                 mov ax,DirSurEste
                 mov word ptr[di],ax                 
@@ -911,6 +916,7 @@ include mjuego.asm
            ;Fin Etiqueta
 
            EstadoSurOeste:
+                call aumentaPunto
                 mDeleteBlock bx
                 mov ax,DirSurOeste
                 mov word ptr[di],ax                 
@@ -969,9 +975,6 @@ include mjuego.asm
 
             reiniciar:;
                 mov bx,si                           ;bx=iterador,si=valor fijo
-                ;mov cx,9
-                ;jmp C2
-            ;fin etiqueta
 
            C2: 
                 add bx,320
@@ -999,6 +1002,32 @@ include mjuego.asm
             ;fin etiqueta
         ;fin Subrutina epilogo
     deleteBlock endp
+
+
+    aumentaPunto proc
+        ;--------------------------------------------------------------------
+        ;   Recibe:      Nada                                                       
+        ;   Devuelve:    Nada                                                
+        ;                                                                    
+        ;   Comentarios: Aumenta el punteo de jugador               
+        ;--------------------------------------------------------------------
+
+        ;ini Subrutina proglogo
+        ;ini Subrutina prologo
+
+        ;Ini Codigo--
+            inc punteo
+            Ascii punteo 
+            mSetCursor 0,25
+            print Num
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                ret 
+            ;fin etiqueta
+        ;fin Subrutina epilogo 
+    aumentaPunto endp
 
     deleteDerecha proc
         ;--------------------------------------------------------------------
@@ -1162,6 +1191,8 @@ include mjuego.asm
             mGenerarObstaculo bx,Cyan  
             add bx,13   
             mGenerarObstaculo bx,Cyan      
+            add bx,13   
+            mGenerarObstaculo bx,Cyan  
 
         ;Fin Codigo--
 
@@ -1192,7 +1223,9 @@ include mjuego.asm
             add bx,13   
             mGenerarObstaculo bx,Cyan   
             add bx,13   
-            mGenerarObstaculo bx,Cyan        
+            mGenerarObstaculo bx,Cyan  
+            add bx,13   
+            mGenerarObstaculo bx,Cyan      
 
         ;Fin Codigo--
 

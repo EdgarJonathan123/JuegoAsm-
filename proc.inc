@@ -235,9 +235,8 @@
                 mov word ptr[bp-2],bx       ; pasamos de 16 bits a 8 bits 
                 mov al, byte ptr[bp-2]
 
-
                 cmp al,0                    ;¿Fin de Numero?
-                je FIN                      ;si: enviar al fin de l procedimiento
+                je FIN                      ;si: enviar al fin del procedimiento
 
                 mov num[si],al              ;ponemos el numero en ascii en la cadena
                 inc si                      ;incrementamos los valores               

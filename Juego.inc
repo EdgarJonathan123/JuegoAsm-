@@ -3,11 +3,42 @@ include mjuego.asm
 .data
 ;====================Ini Var Globales=============================
 
+    gameText db 'User1    N1   0000  00:00:01','$'
+    
+    ;Variables Boolenas
+        TRUE        =   1d
+        FALSE       =   2D
+
+
+    ;Ini Global Sensor
+
+            ;---;   ;---;
+            ; 8 ;   ; 7 ;
+        ;---;---;---;---;---;
+        ; 1 ;           ; 6 ;
+        ;---;           ;---;
+            ;           ;
+        ;---;           ;---;
+        ; 2 ;           ; 5 ;
+        ;---;---;---;---;---;
+            ; 3 ;   ; 4 ;
+            ;---;   ;---;
+
+        Sensor1     =   1d              ;Se Usa  Sub pos,Sensor1
+        Sensor2     =   639d            ;Se Usa  Add pos,Sensor2   
+        Sensor3     =   960d            ;Se Usa  Add pos,Sensor3
+        Sensor4     =   962d            ;Se Usa  Add pos,Sensor4
+        Sensor5     =   643d            ;Se Usa  Add pos,Sensor5    
+        Sensor6     =   3d              ;Se Usa  Add pos,Sensor6
+        Sensor7     =   318d            ;Se Usa  Sub pos,Sensor7
+        Sensor8     =   320d            ;Se Usa  Sub pos,Sensor8   
+    ;Fin Global Sensor
+
     ;tamano obstaculos
     colObstaculo    =  50d
     filObstaculo    =   8d
 
-    Retardo         =  200d
+    Retardo         =  180d
 
     ;Colores
     Negro           =   0d
@@ -39,6 +70,8 @@ include mjuego.asm
 	salidaJuego 	word 	0
     terminoJuego    word    0
     pausa           word    0
+
+    moises          db  'moi$'
 
 
     anchoBarra      = 30
@@ -315,10 +348,57 @@ include mjuego.asm
 	game proc
 
 		BUCLE:
-			mov ax,salidaJuego[0]
-            cmp terminoJuego[0],1
-			je FIN
+
+            EstadoJuego:
+                cmp pausa[0],1
+                je accionesPausa
+                cmp terminoJuego[0],1
+                je FIN
+                jmp instruction
+            ;Fin etiqueta
+
+            accionesPausa:
+                call listening
+                cmp al,01bh                         ;se presiono esc
+                je despausar
+                cmp al,'1'
+                je level1
+                cmp al,'2'
+                je level2
+                cmp al,'3'
+                je level3
+                jmp Bucle
+            ;Fin etiqueta
+
+            level1:
+                mov Nivel[0],1
+                mov cambioNivel[0],1
+                jmp despausar
+            ;fin etiqueta
+
+            level2:
+                mov Nivel[0],2
+                mov cambioNivel[0],1
+                jmp despausar
+            ;fin etiqueta
+
+            level3: 
+                mov Nivel[0],3
+                mov cambioNivel[0],1
+                jmp despausar
+            ;fin etiqueta
+
+            despausar:
+                mov pausa[0],0                      ;Se quito la pausa
+                jmp Bucle
+            ;fin etiqueta
+
+
+            instruction:
 				mInstrucciones
+            ;Fin etiqueta 
+
+
 			jmp Bucle
         ;fin etiqueta
 
@@ -545,9 +625,9 @@ include mjuego.asm
                 add cx,ax                       ;cx=cx+ax= posicion final barra
 
                 cmp bx,ax                       ;¿posicion pelotita es menor que posicion inicial barra?
-                jb VerificaObstaculo            ;si: no hace nada 
+                jb FIN            ;si: no hace nada 
                 cmp bx,cx                       ;¿posicion pelotita es mayor que posicion Final barra?
-                ja VerificaObstaculo            ;si: no hace nada
+                ja FIN            ;si: no hace nada
 
 
                 mov ax,[di]                     ;ax= estado
@@ -556,7 +636,7 @@ include mjuego.asm
                 cmp ax,4                        ;estado=SurEste
                 je EstadoNorEste
 
-                jmp VerificaObstaculo
+                jmp FIN
            ;Fin de etiqueta
 
            EstadoNorEste:
@@ -571,71 +651,6 @@ include mjuego.asm
                 jmp FIN
            ;fin etiqueta
 
-           EstadoSurEste:
-                mov ax,DirSurEste
-                mov word ptr[di],ax                 
-                jmp FIN
-           ;Fin Etiqueta
-
-           EstadoSurOeste:
-                mov ax,DirSurOeste
-                mov word ptr[di],ax                 
-                jmp FIN
-           ;Fin Etiqueta
-
-
-            VerificaObstaculo:
-                mov bx,[si]
-
-
-                sub bx,1
-                mov al,es:[bx]
-                cmp al,Cyan                    ;al compara 3
-                je DeleteLateralSuperior
-
-                sub bx,319
-                mov al,es:[bx]
-                cmp al,Cyan                    ;al compara 3
-                je DeleteSuperior
-
-                ;jb FIN                      ;al es menor a 3,No se hace Nada
-                ;ja FIN                      ;al es mayor a 3,No se hace Nada
-                ;Si es es igual a 3
-                jmp FIN
-            ;fin
-
-            DeleteSuperior:
-                mDeleteBlock bx
-
-                mov ax,DirNorEste
-                cmp [di],ax
-                je EstadoSurEste
-
-                mov ax,DirNorOeste
-                cmp [di],ax
-                je EstadoSurOeste
-
-
-                jmp FIN
-            ;fin
-
-            DeleteLateralSuperior:
-                mDeleteBlock bx
-
-                mov ax,DirSurOeste
-                cmp [di],ax
-                je EstadoSurEste
-
-                mov ax,DirNorOeste
-                cmp [di],ax
-                je EstadoNorEste
-                jmp FIN
-            ;fin
-
-
-
-
-          
         ;Fin Codigo--
 
         ;ini Subrutina epilogo
@@ -647,6 +662,274 @@ include mjuego.asm
             ;fin etiqueta
         ;fin Subrutina epilogo
     colisionBarra endp
+
+
+    gestionObstaculo proc
+        ;--------------------------------------------------------------------
+        ;   Recibe:      [bp+4] = pos
+        ;                [bp+6] = estado
+        ;                                                                  
+        ;   Devuelve:    Nada                                                
+        ;                                                                    
+        ;   Comentarios: Gestiona si la pelotita choca con los Obstaculos              
+        ;--------------------------------------------------------------------
+        ;ini Subrutina proglogo
+            push bp
+            mov  bp,sp
+            pusha
+        ;ini Subrutina prologo
+
+        ;Ini Codigo--
+            mov si,word ptr[bp+4]               ;si=direccion de posicion
+            mov di,word ptr[bp+6]               ;di=direccion de estado
+
+
+            VerificaEstado:
+                mov ax,DirNorEste
+                cmp [di],ax
+                je VerificaNorESTE
+
+                mov ax,DirNorOeste
+                cmp [di],ax
+                je VerificaNorOeste
+
+                mov ax,DirSurOeste
+                cmp [di],ax
+                je VerificaSurOeste
+
+                mov ax,DirSurEste
+                cmp [di],ax
+                je VerificaSurEste
+            ;Fin Etiqueta
+
+            VerificaNorEste:
+                ;---;   ;---;
+                ; 8 ;   ; 7 ;
+                ;---;---;---;---;
+                ;   ____    ; 6 ;
+                ;      /|   ;---;
+                ;     / |   ;
+                ;    /      ;---;
+                ;   /       ; 5 ;
+                ;-----------;---;
+
+
+                ;Para la etiqueta 8 de la figura
+                mov bx,[si]
+                mov ax,Sensor8
+                sub bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoSurEste
+
+                ;Para la etiqueta 7 de la figura
+                mov bx,[si]   
+                mov ax,Sensor7
+                sub bx,ax                  
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoSurEste
+
+                ;Para la etiqueta 6 de la figura
+                mov bx,[si]
+                mov ax,Sensor6
+                add bx,ax                        
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoNorOeste
+
+                ;Para la etiqueta 5 de la figura
+                mov bx,[si]
+                mov ax,Sensor5
+                add bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoNorOeste
+
+                jmp FIN
+            ;fIN etiqueta
+
+            VerificaNorOeste:
+                    ;---;   ;---;
+                    ; 8 ;   ; 7 ;
+                ;---;---;---;---;
+                ; 1 ;           ;
+                ;---;           ;
+                    ;           ;
+                ;---;           ;
+                ; 2 ;           ; 
+                ;---;-----------;
+
+                ;Para la etiqueta 7 de la figura
+                mov bx,[si]
+                mov ax,Sensor7
+                sub bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoSurOeste
+
+                ;Para la etiqueta 8 de la figura
+                mov bx,[si]   
+                mov ax,Sensor8
+                sub bx,ax                  
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoSurOeste
+
+                ;Para la etiqueta 1 de la figura
+                mov bx,[si]
+                mov ax,Sensor1
+                sub bx,ax                        
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoNorEste
+
+                ;Para la etiqueta 2 de la figura
+                mov bx,[si]
+                mov ax,Sensor2
+                add bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoNorEste
+
+                jmp FIN
+            ;fin etiqueta
+
+            VerificaSurEste:
+                ;-----------;---;
+                ;           ; 6 ;
+                ;           ;---;
+                ;           ;
+                ;           ;---;
+                ;           ; 5 ;
+                ;---;---;---;---;
+                ; 3 ;   ; 4 ;
+                ;---;   ;---;
+
+                ;Para la etiqueta 3 de la figura
+                mov bx,[si]
+                mov ax,Sensor3
+                add bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoNorEste
+
+                ;Para la etiqueta 4 de la figura
+                mov bx,[si]   
+                mov ax,Sensor4
+                add bx,ax                  
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoNorEste
+
+                ;Para la etiqueta 5 de la figura
+                mov bx,[si]
+                mov ax,Sensor5
+                add bx,ax                        
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoSurOeste
+
+                ;Para la etiqueta 6 de la figura
+                mov bx,[si]
+                mov ax,Sensor6
+                add bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoSurOeste
+
+                jmp FIN
+            ;fin etiqueta
+
+            VerificaSurOeste:
+                ;---;-----------;
+                ; 1 ;           ;
+                ;---;      /    ;
+                    ;     /     ;
+                ;---;  | /      ;
+                ; 2 ;  |/___    ;
+                ;---;---;---;---;
+                    ; 3 ;   ; 4 ;
+                    ;---;   ;---;
+
+
+                ;Para la etiqueta 1 de la figura
+                mov bx,[si]
+                mov ax,Sensor1
+                sub bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoSurEste
+
+                ;Para la etiqueta 2 de la figura
+                mov bx,[si]   
+                mov ax,Sensor2
+                add bx,ax                  
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoSurEste
+
+                ;Para la etiqueta 3 de la figura
+                mov bx,[si]
+                mov ax,Sensor3
+                add bx,ax                        
+                mov al,es:[bx]
+                cmp al,Cyan                    
+                je EstadoNorOeste
+
+                ;Para la etiqueta 4 de la figura
+                mov bx,[si]
+                mov ax,Sensor4
+                add bx,ax                      
+                mov al,es:[bx]
+                cmp al,Cyan                     
+                je EstadoNorOeste
+
+                jmp FIN
+            ;fin etiqueta
+   
+
+            EstadoNorEste:
+                mDeleteBlock bx
+                mov ax,DirNorEste
+                mov word ptr[di],ax                 
+                jmp FIN
+           ;fin etiqueta
+
+           EstadoNorOeste:
+                mDeleteBlock bx
+                mov ax,DirNorOeste
+                mov word ptr[di],ax                 
+                jmp FIN
+           ;fin etiqueta
+
+           EstadoSurEste:
+                mDeleteBlock bx
+                mov ax,DirSurEste
+                mov word ptr[di],ax                 
+                jmp FIN
+           ;Fin Etiqueta
+
+           EstadoSurOeste:
+                mDeleteBlock bx
+                mov ax,DirSurOeste
+                mov word ptr[di],ax                 
+                jmp FIN
+           ;Fin Etiqueta
+          
+
+        ;Fin Codigo--
+
+        ;ini Subrutina epilogo
+            FIN:
+                popa
+                mov sp,bp
+                pop bp
+                ret 4
+            ;fin etiqueta
+        ;fin Subrutina epilogo
+
+    gestionObstaculo endp
 
     deleteBlock proc
         ;--------------------------------------------------------------------
@@ -664,24 +947,45 @@ include mjuego.asm
         ;ini Subrutina prologo
 
         ;Ini Codigo--
+           xor ax,ax
            mov si,word ptr[bp+4]               ;si=Posicion absoluta Actual
            mov di,word ptr[bp+6]               ;di=Posicion Color A Eliminar
        
            mov bx,si                           ;bx=iterador,si=valor fijo
+           ;mov cx,9
 
            C1: 
-                
+                mov al,es:[bx]
+                cmp al,Negro
+                je reiniciar
 
-                printReg bx
                 mDeleteDerecha bx
                 mDeleteIzquierda bx
+
+                sub bx,320
+                jmp C1
+                ;loop C1
+           ;Fin etiqueta 
+
+            reiniciar:;
+                mov bx,si                           ;bx=iterador,si=valor fijo
+                ;mov cx,9
+                ;jmp C2
+            ;fin etiqueta
+
+           C2: 
+                add bx,320
 
                 mov al,es:[bx]
                 cmp al,Negro
                 je FIN
 
-                sub bx,320
-                jmp C1
+                mDeleteDerecha bx
+                mDeleteIzquierda bx
+
+                
+                jmp C2
+                ;loop C2
            ;Fin etiqueta 
 
         ;Fin Codigo--
@@ -717,19 +1021,19 @@ include mjuego.asm
             
                 mov bx,si                           ;bx=iterador,si=valor fijo
 
-            C1:
-                
+            C1:                
                 mov al,es:[bx]
                 cmp al,Negro
                 je FIN
 
-                mov al,Amarillo
+                mov al,Negro
                 mov es:[bx],al
 
                 inc bx                
                 jmp C1
             ;fin
         ;Fin Codigo--
+
 
         ;ini Subrutina epilogo
             FIN:
@@ -768,7 +1072,7 @@ include mjuego.asm
                 cmp al,Negro
                 je FIN
 
-                mov al,Amarillo
+                mov al,Negro
                 mov es:[bx],al
 
                 dec bx                 
@@ -842,7 +1146,7 @@ include mjuego.asm
 
 ;====================Ini Niveles===================================
 
-    Nivel1 proc
+    pintarNivel1 proc
         ;--------------------------------------------------------------------
         ;   Recibe:      Nada                                                 
         ;   Devuelve:    Nada                                                
@@ -865,9 +1169,9 @@ include mjuego.asm
             FIN:
                 ret 
         ;fin Subrutina epilogo
-    Nivel1 endp
+    pintarNivel1 endp
 
-    Nivel2 proc
+    pintarNivel2 proc
         ;--------------------------------------------------------------------
         ;   Recibe:      Nada                                                 
         ;   Devuelve:    Nada                                                
@@ -897,9 +1201,9 @@ include mjuego.asm
                 pop bx
                 ret 
         ;fin Subrutina epilogo
-    Nivel2 endp
+    pintarNivel2 endp
 
-    Nivel3 proc
+    pintarNivel3 proc
         ;--------------------------------------------------------------------
         ;   Recibe:      Nada                                                 
         ;   Devuelve:    Nada                                                
@@ -930,7 +1234,7 @@ include mjuego.asm
                 pop bx
                 ret 
         ;fin Subrutina epilogo
-    Nivel3 endp
+    pintarNivel3 endp
 
     pintarNivel proc
         ;--------------------------------------------------------------------
@@ -963,19 +1267,20 @@ include mjuego.asm
             ;fin etiqueta
 
             level1:
-                call Nivel1
+                call pintarNivel1
                 mov cambioNivel[0],0
                 jmp FIN
             ;Fin Juego
 
             level2:
-                call Nivel2
+                mWrite<'Level2'>
+                call pintarNivel2
                 mov cambioNivel[0],0
                 jmp FIN
             ;fin etiqueta
 
             level3:
-                call Nivel3
+                call pintarNivel3
                 mov cambioNivel[0],0
                 jmp FIN
             ;fin etiqueta
@@ -987,6 +1292,76 @@ include mjuego.asm
                 ret 
         ;fin Subrutina epilogo
     pintarNivel endp
+
+    controlNiveles proc
+        ;--------------------------------------------------------------------
+        ;   Recibe:      Nada                                                 
+        ;   Devuelve:    Nada                                                
+        ;                                                                    
+        ;   Comentarios: Pinta el Nivel Segun la variable Global (Nivel)                                 
+        ;--------------------------------------------------------------------
+
+        ;Ini Subrutina prologo
+
+        ;Fin Subrutina prologo
+
+
+        ;Ini Codigo
+            level:
+                cmp Nivel[0],1
+                je level1
+                cmp Nivel[0],2
+                je level2
+                cmp Nivel[0],3
+                je level3
+                jmp FIN
+            ;fin etiqueta
+
+            level1:
+                mDelay 180 
+                mAvanzaPelota posicion,estado
+                mColisionBarra posicion,estado
+                mgestionObstaculo posicion,estado
+                jmp FIN
+            ;Fin Juego
+
+            level2:
+                mDelay 150
+                mAvanzaPelota posicion,estado
+                mColisionBarra posicion,estado
+                mgestionObstaculo posicion,estado
+                
+
+                mAvanzaPelota posicion1,estado1
+                mColisionBarra posicion1,estado1
+                mgestionObstaculo posicion1,estado1
+                jmp FIN
+            ;fin etiqueta
+
+            level3:
+                mDelay 108
+                mAvanzaPelota posicion,estado
+                mColisionBarra posicion,estado
+                mgestionObstaculo posicion,estado
+                
+
+                mAvanzaPelota posicion1,estado1
+                mColisionBarra posicion1,estado1
+                mgestionObstaculo posicion1,estado1
+               
+                mAvanzaPelota posicion2,estado2
+                mColisionBarra posicion2,estado2
+                mgestionObstaculo posicion2,estado2
+                jmp FIN
+            ;fin etiqueta
+        ;Fin Codigo
+
+
+        ;ini Subrutina epilogo
+            FIN:
+                ret 
+        ;fin Subrutina epilogo
+    controlNiveles endp
 ;====================Fin Niveles===================================
 
 ;====================Ini Instrucciones=============================
@@ -1008,9 +1383,13 @@ include mjuego.asm
         	ModoVideo
 			mPintarMargen MagentaClaro
 
-			mov Nivel[0],3
+            print gameText
+
+			mov Nivel[0],1
             mov cambioNivel[0],1
             mPintarNivel
+
+    
 
 
             mtolineal 180,12
@@ -1023,13 +1402,13 @@ include mjuego.asm
 			mov posicion[0],ax              ;define la posicion inical de la pelotita
 
 
-           ;mov estado1[0],2                 ;Se inicia en NorEste
-           ;mtolineal 150,60
-           ;mov posicion1[0],ax              ;define la posicion inical de la pelotita
-           ;
-           ;mov estado2[0],2                 ;Se inicia en NorEste
-           ;mtolineal 120,100
-           ;mov posicion2[0],ax              ;define la posicion inical de la pelotita
+            mov estado1[0],2                 ;Se inicia en NorEste
+            mtolineal 150,60
+            mov posicion1[0],ax              ;define la posicion inical de la pelotita
+           
+            mov estado2[0],2                 ;Se inicia en NorEste
+            mtolineal 120,100
+            mov posicion2[0],ax              ;define la posicion inical de la pelotita
 
         ;Fin Codigo--
 
@@ -1053,43 +1432,12 @@ include mjuego.asm
 
         ;Ini Codigo--
 
-            cmp pausa[0],1
-            je accionesPausa
-            jmp c1
-
-            accionesPausa:
-                call listening
-                cmp al,01bh                         ;se presiono esc
-                je despausar
-                jmp FIN
-            ;Fin etiqueta
-
-            despausar:
-                mov pausa[0],0                      ;Se quito la pausa
-                jmp FIN
-            ;fin etiqueta
-
-        	c1:
+    
                 mPintarNivel 
-                mDelay Retardo 
-
-        	    mAvanzaPelota posicion,estado
-                mColisionBarra posicion,estado
-
-                ;mAvanzaPelota posicion1,estado1
-                ;mColisionBarra posicion1,estado1
-               ;
-                ;mAvanzaPelota posicion2,estado2
-                ;mColisionBarra posicion2,estado2
-               
-               mMoverBarra
+                call controlNiveles
+                mMoverBarra
                 
                 jmp FIN
-            ;fin etiqueta
-            
-           
-
-
         ;Fin Codigo--
 
         ;ini Subrutina epilogo

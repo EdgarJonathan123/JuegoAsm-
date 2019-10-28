@@ -9,4 +9,4 @@
     corC db 93,'$'
 
 
-    gameText dw '[','e','s','t','o',']','$'
+    

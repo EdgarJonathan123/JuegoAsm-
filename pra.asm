@@ -6,6 +6,7 @@
     .stack 100h
         include proc.inc
         include juego.inc
+        include usuarios.inc
     .data
         include data.asm
 ;================= FIN TIPO DE EJECUTABLE ========================

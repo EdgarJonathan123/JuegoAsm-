@@ -187,4 +187,11 @@
         push pos
         call DeleteIzquierda
     endm
+
+
+    mgestionObstaculo macro pos,state
+        push offset state
+        push offset pos
+        call gestionObstaculo
+    endm
 ;====================Fin Juego====================

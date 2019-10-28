@@ -57,7 +57,7 @@ endm
 
 String_size macro cadena 
 	push offset cadena 
-    call Str_length
+    call Str_length 
 endm
 
 getChar macro
